@@ -1,3 +1,5 @@
+extern crate libc;
+
 #[allow(dead_code)]
 mod ffi;
 
