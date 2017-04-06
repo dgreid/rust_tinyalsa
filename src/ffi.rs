@@ -35,6 +35,14 @@ pub struct PcmConfig {
     silence_threshold: ::libc::c_uint,
 }
 
+#[repr(C)]
+#[derive(Copy, Clone)]
+pub struct SndPcmChannelArea {
+    addr: *mut ::libc::c_void,
+    first: ::libc::c_uint,
+    step: ::libc::c_uint,
+}
+
 // All flags from pcm.h in tinyalsa.
 const PCM_OUT: ::libc::c_uint = 0x00000000;
 const PCM_IN: ::libc::c_uint = 0x10000000;
@@ -42,7 +50,6 @@ const PCM_MMAP: ::libc::c_uint = 0x00000001;
 const PCM_NOIRQ: ::libc::c_uint = 0x00000002;
 const PCM_NORESTART: ::libc::c_uint = 0x00000004;
 const PCM_MONOTONIC: ::libc::c_uint = 0x00000008;
-
 
 // Enumeration of a PCM's hardware parameters.
 // Each of these parameters is either a mask or an interval.
@@ -109,6 +116,28 @@ extern {
     pub fn pcm_params_get_mask(pcm_params: *const PcmParams, param: PcmParam) -> Option<&PcmMask>;
     pub fn pcm_params_get_min(pcm_params: *const PcmParams, param: PcmParam) -> ::libc::c_uint;
     pub fn pcm_params_get_max(pcm_params: *const PcmParams, param: PcmParam) -> ::libc::c_uint;
+
+    pub fn pcm_link(pcm: *mut Pcm, pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_unlink(pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_prepare(pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_start(pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_stop(pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_avail_update(pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_state(pcm: *mut Pcm) -> ::libc::c_int;
+    pub fn pcm_wait(pcm: *mut Pcm, timeout_ms: ::libc::c_int) -> ::libc::c_int;
+    pub fn pcm_get_delay(pcm: *mut Pcm) -> ::libc::c_long;
+
+    pub fn pcm_mmap_begin(pcm: *mut Pcm, areas: *mut *const SndPcmChannelArea,
+                          offset: *mut ::libc::c_uint, frames: *mut ::libc::c_uint)
+            -> ::libc::c_int;
+    pub fn pcm_mmap_commit(pcm: *mut Pcm, offset: ::libc::c_uint, frames: ::libc::c_uint)
+            -> ::libc::c_int;
+    pub fn pcm_mmap_transfer(pcm: *mut Pcm, buffer: *const ::libc::c_void, bytes: ::libc::c_uint)
+            -> ::libc::c_int;
+    pub fn pcm_mmap_write(pcm: *mut Pcm, data: *const ::libc::c_void, count: ::libc::c_uint)
+            -> ::libc::c_int;
+    pub fn pcm_mmap_read(pcm: *mut Pcm, data: *mut ::libc::c_void, count: ::libc::c_uint)
+            -> ::libc::c_int;
 }
 
 #[cfg(test)]
@@ -194,6 +223,26 @@ mod tests {
             assert_eq!(1, pcm_is_ready(pcm));
             assert_eq!(256, pcm_frames_to_bytes(pcm, 64));
             assert_eq!(0, pcm_close(pcm));
+        }
+    }
+
+    #[test]
+    fn mmap_output() {
+        unsafe {
+            if let Some(pcm) = pcm_open(PCM_CARD, PCM_DEV, PCM_OUT | PCM_MMAP, &PCM_DEV_CONFIG) {
+                assert_eq!(1, pcm_is_ready(pcm));
+                assert_eq!(0, pcm_start(pcm));
+
+                let mut areas: *const SndPcmChannelArea = ::std::ptr::null();
+                let mut offset: ::libc::c_uint = 0;
+                let mut frames: ::libc::c_uint = 512;
+                assert_eq!(0, pcm_mmap_begin(pcm, &mut areas as *mut *const SndPcmChannelArea, &mut offset, &mut frames));
+                println!("offset {}, frames {}", offset, frames);
+                assert_eq!(0, pcm_mmap_commit(pcm, offset, 0));
+                assert_eq!(0, pcm_close(pcm));
+            } else {
+                assert!(false);
+            }
         }
     }
 
