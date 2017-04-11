@@ -44,12 +44,12 @@ pub struct SndPcmChannelArea {
 }
 
 // All flags from pcm.h in tinyalsa.
-const PCM_OUT: ::libc::c_uint = 0x00000000;
-const PCM_IN: ::libc::c_uint = 0x10000000;
-const PCM_MMAP: ::libc::c_uint = 0x00000001;
-const PCM_NOIRQ: ::libc::c_uint = 0x00000002;
-const PCM_NORESTART: ::libc::c_uint = 0x00000004;
-const PCM_MONOTONIC: ::libc::c_uint = 0x00000008;
+pub const PCM_OUT: ::libc::c_uint = 0x00000000;
+pub const PCM_IN: ::libc::c_uint = 0x10000000;
+pub const PCM_MMAP: ::libc::c_uint = 0x00000001;
+pub const PCM_NOIRQ: ::libc::c_uint = 0x00000002;
+pub const PCM_NORESTART: ::libc::c_uint = 0x00000004;
+pub const PCM_MONOTONIC: ::libc::c_uint = 0x00000008;
 
 // Enumeration of a PCM's hardware parameters.
 // Each of these parameters is either a mask or an interval.
@@ -146,7 +146,7 @@ mod tests {
     use std::ffi::CStr;
 
     const PCM_CARD: u32 = 1;
-    const PCM_DEV: u32 = 3;
+    const PCM_DEV: u32 = 0;
 
     const PCM_DEV_CONFIG: PcmConfig = PcmConfig {
         channels: 2,
