@@ -14,6 +14,111 @@ pub enum PcmFormat {
     PcmFormatMax,
 }
 
+// From alsalib asound.h
+//  tinyalsa doesn't provide this, but it's needed to check if a format is valid
+//  in params.
+#[repr(C)]
+#[derive(Copy, Clone, Debug, PartialEq)]
+enum AlsaFormatBitMask {
+	/** Signed 8 bit */
+	SND_PCM_FORMAT_S8 = 0,
+	/** Unsigned 8 bit */
+	SND_PCM_FORMAT_U8,
+	/** Signed 16 bit Little Endian */
+	SND_PCM_FORMAT_S16_LE,
+	/** Signed 16 bit Big
+	 * Endian */
+	SND_PCM_FORMAT_S16_BE,
+	/** Unsigned 16 bit Little Endian */
+	SND_PCM_FORMAT_U16_LE,
+	/** Unsigned 16 bit Big Endian */
+	SND_PCM_FORMAT_U16_BE,
+	/** Signed 24 bit Little Endian using low three bytes in 32-bit word */
+	SND_PCM_FORMAT_S24_LE,
+	/** Signed 24 bit Big Endian using low three bytes in 32-bit word */
+	SND_PCM_FORMAT_S24_BE,
+	/** Unsigned 24 bit Little Endian using low three bytes in 32-bit word */
+	SND_PCM_FORMAT_U24_LE,
+	/** Unsigned 24 bit Big Endian using low three bytes in 32-bit word */
+	SND_PCM_FORMAT_U24_BE,
+	/** Signed 32 bit Little Endian */
+	SND_PCM_FORMAT_S32_LE,
+	/** Signed 32 bit Big Endian */
+	SND_PCM_FORMAT_S32_BE,
+	/** Unsigned 32 bit Little Endian */
+	SND_PCM_FORMAT_U32_LE,
+	/** Unsigned 32 bit Big Endian */
+	SND_PCM_FORMAT_U32_BE,
+	/** Float 32 bit Little Endian, Range -1.0 to 1.0 */
+	SND_PCM_FORMAT_FLOAT_LE,
+	/** Float 32 bit Big Endian, Range -1.0 to 1.0 */
+	SND_PCM_FORMAT_FLOAT_BE,
+	/** Float 64 bit Little Endian, Range -1.0 to 1.0 */
+	SND_PCM_FORMAT_FLOAT64_LE,
+	/** Float 64 bit Big Endian, Range -1.0 to 1.0 */
+	SND_PCM_FORMAT_FLOAT64_BE,
+	/** IEC-958 Little Endian */
+	SND_PCM_FORMAT_IEC958_SUBFRAME_LE,
+	/** IEC-958 Big Endian */
+	SND_PCM_FORMAT_IEC958_SUBFRAME_BE,
+	/** Mu-Law */
+	SND_PCM_FORMAT_MU_LAW,
+	/** A-Law */
+	SND_PCM_FORMAT_A_LAW,
+	/** Ima-ADPCM */
+	SND_PCM_FORMAT_IMA_ADPCM,
+	/** MPEG */
+	SND_PCM_FORMAT_MPEG,
+	/** GSM */
+	SND_PCM_FORMAT_GSM,
+	/** Special */
+	SND_PCM_FORMAT_SPECIAL = 31,
+	/** Signed 24bit Little Endian in 3bytes format */
+	SND_PCM_FORMAT_S24_3LE = 32,
+	/** Signed 24bit Big Endian in 3bytes format */
+	SND_PCM_FORMAT_S24_3BE,
+	/** Unsigned 24bit Little Endian in 3bytes format */
+	SND_PCM_FORMAT_U24_3LE,
+	/** Unsigned 24bit Big Endian in 3bytes format */
+	SND_PCM_FORMAT_U24_3BE,
+	/** Signed 20bit Little Endian in 3bytes format */
+	SND_PCM_FORMAT_S20_3LE,
+	/** Signed 20bit Big Endian in 3bytes format */
+	SND_PCM_FORMAT_S20_3BE,
+	/** Unsigned 20bit Little Endian in 3bytes format */
+	SND_PCM_FORMAT_U20_3LE,
+	/** Unsigned 20bit Big Endian in 3bytes format */
+	SND_PCM_FORMAT_U20_3BE,
+	/** Signed 18bit Little Endian in 3bytes format */
+	SND_PCM_FORMAT_S18_3LE,
+	/** Signed 18bit Big Endian in 3bytes format */
+	SND_PCM_FORMAT_S18_3BE,
+	/** Unsigned 18bit Little Endian in 3bytes format */
+	SND_PCM_FORMAT_U18_3LE,
+	/** Unsigned 18bit Big Endian in 3bytes format */
+	SND_PCM_FORMAT_U18_3BE,
+	/* G.723 (ADPCM) 24 kbit/s, 8 samples in 3 bytes */
+	SND_PCM_FORMAT_G723_24,
+	/* G.723 (ADPCM) 24 kbit/s, 1 sample in 1 byte */
+	SND_PCM_FORMAT_G723_24_1B,
+	/* G.723 (ADPCM) 40 kbit/s, 8 samples in 3 bytes */
+	SND_PCM_FORMAT_G723_40,
+	/* G.723 (ADPCM) 40 kbit/s, 1 sample in 1 byte */
+	SND_PCM_FORMAT_G723_40_1B,
+	/* Direct Stream Digital (DSD) in 1-byte samples (x8) */
+	SND_PCM_FORMAT_DSD_U8,
+	/* Direct Stream Digital (DSD) in 2-byte samples (x16) */
+	SND_PCM_FORMAT_DSD_U16_LE,
+	/* Direct Stream Digital (DSD) in 4-byte samples (x32) */
+	SND_PCM_FORMAT_DSD_U32_LE,
+	/* Direct Stream Digital (DSD) in 2-byte samples (x16) */
+	SND_PCM_FORMAT_DSD_U16_BE,
+	/* Direct Stream Digital (DSD) in 4-byte samples (x32) */
+	SND_PCM_FORMAT_DSD_U32_BE,
+	SND_PCM_FORMAT_LAST = SND_PCM_FORMAT_DSD_U32_BE,
+
+}
+
 // From pcm_mask in tinyalsa
 #[repr(C)]
 #[derive(Copy, Clone)]
@@ -56,8 +161,7 @@ pub const PCM_MONOTONIC: ::libc::c_uint = 0x00000008;
 // @ingroup libtinyalsa-pcm
 #[repr(C)]
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum PcmParam
-{
+pub enum PcmParam {
     /** A mask that represents the type of read or write method available (e.g. interleaved, mmap). */
     Access,
     /** A mask that represents the @ref pcm_format available (e.g. @ref PCM_FORMAT_S32_LE) */
@@ -89,9 +193,12 @@ pub enum Pcm {} // struct pcm in tinyalsa
 pub enum PcmParams {} // struct pcm_params in tinyalsa
 
 #[link(name = "tinyalsa")]
-extern {
-    pub fn pcm_open(card: ::libc::c_uint, device: ::libc::c_uint, flags: ::libc::c_uint,
-                    config: *const PcmConfig) -> Option<&mut Pcm>;
+extern "C" {
+    pub fn pcm_open(card: ::libc::c_uint,
+                    device: ::libc::c_uint,
+                    flags: ::libc::c_uint,
+                    config: *const PcmConfig)
+                    -> Option<&mut Pcm>;
     pub fn pcm_close(pcm: *mut Pcm) -> ::libc::c_int;
     pub fn pcm_is_ready(pcm: *const Pcm) -> ::libc::c_int;
 
@@ -102,16 +209,24 @@ extern {
     pub fn pcm_get_subdevice(pcm: *const Pcm) -> ::libc::c_uint;
     pub fn pcm_format_to_bits(format: PcmFormat) -> ::libc::c_uint;
     pub fn pcm_frames_to_bytes(pcm: *const Pcm, frames: ::libc::c_uint) -> ::libc::c_uint;
-    pub fn pcm_get_htimestamp(pcm: *mut Pcm, avail: *mut ::libc::c_uint,
-                              timespec: *mut ::libc::timespec) -> ::libc::c_int;
+    pub fn pcm_get_htimestamp(pcm: *mut Pcm,
+                              avail: *mut ::libc::c_uint,
+                              timespec: *mut ::libc::timespec)
+                              -> ::libc::c_int;
 
-    pub fn pcm_writei(pcm: *mut Pcm, data: *const ::libc::c_void,
-                      frames: ::libc::c_uint) -> ::libc::c_int;
-    pub fn pcm_readi(pcm: *mut Pcm, data: *mut ::libc::c_void,
-                     frames: ::libc::c_uint) -> ::libc::c_int;
+    pub fn pcm_writei(pcm: *mut Pcm,
+                      data: *const ::libc::c_void,
+                      frames: ::libc::c_uint)
+                      -> ::libc::c_int;
+    pub fn pcm_readi(pcm: *mut Pcm,
+                     data: *mut ::libc::c_void,
+                     frames: ::libc::c_uint)
+                     -> ::libc::c_int;
 
-    pub fn pcm_params_get(card: ::libc::c_uint, device: ::libc::c_uint, flags: ::libc::c_uint)
-            -> Option<&mut PcmParams>;
+    pub fn pcm_params_get(card: ::libc::c_uint,
+                          device: ::libc::c_uint,
+                          flags: ::libc::c_uint)
+                          -> Option<&mut PcmParams>;
     pub fn pcm_params_free(pcm_params: *mut PcmParams);
     pub fn pcm_params_get_mask(pcm_params: *const PcmParams, param: PcmParam) -> Option<&PcmMask>;
     pub fn pcm_params_get_min(pcm_params: *const PcmParams, param: PcmParam) -> ::libc::c_uint;
@@ -127,17 +242,27 @@ extern {
     pub fn pcm_wait(pcm: *mut Pcm, timeout_ms: ::libc::c_int) -> ::libc::c_int;
     pub fn pcm_get_delay(pcm: *mut Pcm) -> ::libc::c_long;
 
-    pub fn pcm_mmap_begin(pcm: *mut Pcm, areas: *mut *const SndPcmChannelArea,
-                          offset: *mut ::libc::c_uint, frames: *mut ::libc::c_uint)
-            -> ::libc::c_int;
-    pub fn pcm_mmap_commit(pcm: *mut Pcm, offset: ::libc::c_uint, frames: ::libc::c_uint)
-            -> ::libc::c_int;
-    pub fn pcm_mmap_transfer(pcm: *mut Pcm, buffer: *const ::libc::c_void, bytes: ::libc::c_uint)
-            -> ::libc::c_int;
-    pub fn pcm_mmap_write(pcm: *mut Pcm, data: *const ::libc::c_void, count: ::libc::c_uint)
-            -> ::libc::c_int;
-    pub fn pcm_mmap_read(pcm: *mut Pcm, data: *mut ::libc::c_void, count: ::libc::c_uint)
-            -> ::libc::c_int;
+    pub fn pcm_mmap_begin(pcm: *mut Pcm,
+                          areas: *mut *const SndPcmChannelArea,
+                          offset: *mut ::libc::c_uint,
+                          frames: *mut ::libc::c_uint)
+                          -> ::libc::c_int;
+    pub fn pcm_mmap_commit(pcm: *mut Pcm,
+                           offset: ::libc::c_uint,
+                           frames: ::libc::c_uint)
+                           -> ::libc::c_int;
+    pub fn pcm_mmap_transfer(pcm: *mut Pcm,
+                             buffer: *const ::libc::c_void,
+                             bytes: ::libc::c_uint)
+                             -> ::libc::c_int;
+    pub fn pcm_mmap_write(pcm: *mut Pcm,
+                          data: *const ::libc::c_void,
+                          count: ::libc::c_uint)
+                          -> ::libc::c_int;
+    pub fn pcm_mmap_read(pcm: *mut Pcm,
+                         data: *mut ::libc::c_void,
+                         count: ::libc::c_uint)
+                         -> ::libc::c_int;
 }
 
 #[cfg(test)]
@@ -195,9 +320,9 @@ mod tests {
         unsafe {
             let pcm = pcm_open(PCM_CARD, PCM_DEV, 0, &this_config).unwrap();
             assert_eq!(0, pcm_is_ready(pcm));
-            assert_eq!(CStr::from_bytes_with_nul(
-                b"cannot set hw params: Invalid argument\0").unwrap(),
-                CStr::from_ptr(pcm_get_error(pcm)));
+            assert_eq!(CStr::from_bytes_with_nul(b"cannot set hw params: Invalid argument\0")
+                           .unwrap(),
+                       CStr::from_ptr(pcm_get_error(pcm)));
         }
     }
 
@@ -236,7 +361,11 @@ mod tests {
                 let mut areas: *const SndPcmChannelArea = ::std::ptr::null();
                 let mut offset: ::libc::c_uint = 0;
                 let mut frames: ::libc::c_uint = 512;
-                assert_eq!(0, pcm_mmap_begin(pcm, &mut areas as *mut *const SndPcmChannelArea, &mut offset, &mut frames));
+                assert_eq!(0,
+                           pcm_mmap_begin(pcm,
+                                          &mut areas as *mut *const SndPcmChannelArea,
+                                          &mut offset,
+                                          &mut frames));
                 println!("offset {}, frames {}", offset, frames);
                 assert_eq!(0, pcm_mmap_commit(pcm, offset, 0));
                 assert_eq!(0, pcm_close(pcm));
@@ -257,9 +386,8 @@ mod tests {
                 tv_nsec: 0,
             };
             assert_eq!(1, pcm_is_ready(pcm));
-	    assert_eq!(512, pcm_writei(pcm,
-                                       &zero_buf[0] as *const _ as *const ::libc::c_void,
-                                       512));
+            assert_eq!(512,
+                       pcm_writei(pcm, &zero_buf[0] as *const _ as *const ::libc::c_void, 512));
             assert_eq!(0, pcm_get_htimestamp(pcm, &mut avail, &mut ht));
             assert_eq!(512, avail);
             assert_eq!(0, pcm_close(pcm));
@@ -272,9 +400,8 @@ mod tests {
             let mut zero_buf: [i16; 1024] = [0; 1024];
             let pcm = pcm_open(PCM_CARD, PCM_DEV, PCM_IN, &PCM_DEV_CONFIG).unwrap();
             assert_eq!(1, pcm_is_ready(pcm));
-	    assert_eq!(512, pcm_readi(pcm,
-                                      &mut zero_buf[0] as *mut _ as *mut ::libc::c_void,
-                                      512));
+            assert_eq!(512,
+                       pcm_readi(pcm, &mut zero_buf[0] as *mut _ as *mut ::libc::c_void, 512));
             assert_eq!(0, pcm_close(pcm));
         }
     }
