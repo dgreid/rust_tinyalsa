@@ -72,7 +72,7 @@ impl<'a> PcmConfig<'a> {
         }
     }
 
-    pub fn format_valid(&self, format SampleFormat) {
+    pub fn format_valid(&self, format: SampleFormat) {
         //TODO use SND_PCM_ enum from ffi to check the mask
     }
 
